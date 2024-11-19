@@ -6,16 +6,20 @@ from time import sleep
 
 class Player:
    Money = 10
-   Acoes = {
+   actions = {
       "Americanas": 0,
       "123Milhas": 0
    }
 
-class B3:
-   Americanas = 0.001
-   Milhas = 0.2
 
-class Colors:
+class B3:
+   actions = {
+      "Americanas": 0.001,
+      "123Milhas": 0.2
+   }
+
+
+class Colors():
    BLACK = "\033[0;30m"
    RED = "\033[0;31m"
    GREEN = "\033[0;32m"
@@ -42,66 +46,38 @@ class Colors:
    END = "\033[0m"
 
 
-def printDelayed(texto: str, cor=Colors.END, time=0.1):
+def printDelayed(texto: str, color=Colors.END, time=0.1):
+   colors = ([Colors.END] + color if type(color) == list else [Colors.END, color])
    colored = False
+   times = 0
    for char in texto:
       if char == "|":
-         print(Colors.END if colored else cor, end="", flush=True)
+         if not colored:
+            times += 1
+         print(Colors.END if colored else colors[times], end="", flush=True)
          colored = not colored
       else:
          print(char, end="", flush=True)
          sleep(time)
    print("")
-   
-
-def saveData():
-   path = os.environ.get("LOCALAPPDATA")
-   print(path)
-   file = f"{path}\\system_data.csv"
-   print("Saving...", end="\r")
-   with open(file, mode="w") as csvFileWrite:
-      writer = csv.writer(csvFileWrite)
-      text = [f"Americanas,{Player.Acoes["Americanas"]}|123Milhas,{Player.Acoes["123Milhas"]}"], f"Dinheiro,{Player.Money}"
-      writer.writerow(text)
-      csvFileWrite.close()
-
-
-def openData():
-   path = os.environ.get("LOCALAPPDATA")
-   file = f"{path}\\system_data.csv"
-   with open(file, mode='r') as csvFileRead:
-      data = list(csv.reader(csvFileRead))
-      if data:
-         print("Opening saved game!!!")
-         print("Data:", data)
-      else:
-         saveData()
-
-
-def inicialPrints():
-   printDelayed("Bem vindo ao Leãozinho, jogue para conseguir dinheiro!!!\n")
-   printDelayed("Você poderá ver suas estatísticas digitando 'r'")
-   printDelayed("Para ver o manual digite 'm'")
-   printDelayed("Você iniciará com: |R$10|", Colors.GREEN)
-   
 
 def showRules():
    printDelayed("|______________________________|", Colors.BLUE, time=0.01)
    printDelayed("Tecla                     Ação", Colors.CYAN, time=0.01)
    printDelayed("|a|________________Mostrar bolsa", Colors.CYAN, time=0.01)
    printDelayed("|r|_________Mostrar estatísticas", Colors.CYAN, time=0.01)
-   printDelayed("|Ctrl+c|_______Encerrar programa", Colors.CYAN, time=0.01)
+   printDelayed("|esc|__________Encerrar programa", Colors.CYAN, time=0.01)
    printDelayed("|______________________________|\n", Colors.BLUE, time=0.01)
 
 
 def getActions():
    texts = []
-   for key, value in Player.Acoes.items():
+   for key, value in Player.actions.items():
       texts.append(f"\t{key}: {value}")
    return texts
 
 
-def showRank():
+def showRanking():
    printDelayed("|______________________________|", Colors.BLUE, time=0.01)
    printDelayed(f"Dinheiro: |\t{Player.Money}|", Colors.GREEN)
    printDelayed("Ações: ")
@@ -113,8 +89,10 @@ def showRank():
 def showB3():
    printDelayed("|___________________________________|", Colors.BLUE, time=0.01)
    printDelayed("Mostrando ações da bolsa no momento", time=0.05)
-   printDelayed(f"   Americanas__________________|R${B3.Americanas}|", Colors.GREEN, time=0.05)
-   printDelayed(f"   123Milhas__________________|R${B3.Milhas}|", Colors.GREEN, time=0.05)
+   for key, value in B3.actions.items():
+      last = 33 - (len(str(key)) + len(str(value)))
+      underlines = "_" * last
+      printDelayed(f"   |{key}|" + underlines + f"|R${value}|", [Colors.BROWN, Colors.GREEN])
    printDelayed("|___________________________________|\n", Colors.BLUE, time=0.01)
 
 
@@ -124,25 +102,65 @@ def on_press(key):
    if key == keyboard.KeyCode.from_char('m'):
       showRules()
    if key == keyboard.KeyCode.from_char('r'):
-      showRank()
+      showRanking()
    if key == keyboard.KeyCode.from_char('s'):
-      saveData()
+      game.saveData()
+   if key == keyboard.Key.esc:
+      printDelayed("|█||█||█|Encerrando programa|█||█||█|", [Colors.GREEN, Colors.YELLOW, Colors.BLUE, Colors.GREEN, Colors.YELLOW, Colors.BLUE])
+      game.playing = False
 
 
 def on_release(key):
    pass
 
 
-def game():
-   openData()
-   inicialPrints()
-   listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-   listener.start()
+class Game():
+   playing = False
+   path = os.environ.get("LOCALAPPDATA")
+   file = f"{path}\\system_data.csv"
+
+   def start(self):
+      self.openData()
+      self.inicialPrints()
+      self.playing = True
+
+
+   def inicialPrints(self):
+      printDelayed("Bem vindo ao Leãozinho, jogue para conseguir dinheiro!!!\n")
+      printDelayed("Você poderá ver suas estatísticas digitando 'r'")
+      printDelayed("Para ver o manual digite 'm'")
+      printDelayed("Você iniciará com: |R$10|", Colors.GREEN)
+
+
+   def saveData(self):
+      print("Saving...", end="\r")
+      with open(self.file, mode="w") as csvFileWrite:
+         writer = csv.writer(csvFileWrite)
+         text = ""
+
+         for key, value in Player.actions.items():
+            text += f"{key},{value}|"
+
+         writer.writerow([text[0:-1], f"Dinheiro,{Player.Money}"])
+         csvFileWrite.close()
+
+
+   def openData(self):
+      with open(self.file, mode='r') as csvFileRead:
+         data = list(csv.reader(csvFileRead))
+         if data:
+            print("Opening saved game!!!")
+            print("Data:", data)
+         else:
+            self.saveData()
 
 
 if __name__ == "__main__":
-   game()
+   game = Game()
+   game.start()
 
-   while True:
-      a = 1
+   listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+   listener.start()
 
+   while game.playing:
+      pass

@@ -42,23 +42,17 @@ class Colors:
    END = "\033[0m"
 
 
-def printDelayed(texto, time=0.1):
-   valor = ""
+def printDelayed(texto: str, cor=Colors.END, time=0.1):
+   colored = False
    for char in texto:
-       valor += char
-       print(valor, end="\r")
-       sleep(time)
+      if char == "|":
+         print(Colors.END if colored else cor, end="", flush=True)
+         colored = not colored
+      else:
+         print(char, end="", flush=True)
+         sleep(time)
    print("")
-
-
-def printDelayedColor(texto, cor, time=0.1):
-   valor = ""
-   for char in texto:
-       valor += char
-       print(cor + valor + Colors.END, end="\r")
-       sleep(time)
-   print("")
-
+   
 
 def saveData():
    path = os.environ.get("LOCALAPPDATA")
@@ -85,20 +79,19 @@ def openData():
 
 
 def inicialPrints():
-   printDelayed("Bem vindo ao tigrinho, jogue para conseguir dinheiro!!!\n")
+   printDelayed("Bem vindo ao Leãozinho, jogue para conseguir dinheiro!!!\n")
    printDelayed("Você poderá ver suas estatísticas digitando 'r'")
    printDelayed("Para ver o manual digite 'm'")
-   printDelayed("Você iniciará com: ")
-   printDelayedColor("\tR$10", Colors.GREEN)
-
+   printDelayed("Você iniciará com: |R$10|", Colors.GREEN)
+   
 
 def showRules():
-   printDelayedColor("______________________________", Colors.BLUE, 0.01)
-   printDelayed("Tecla                     Ação", 0.01)
-   printDelayed("a________________Mostrar bolsa", 0.01)
-   printDelayed("r_________Mostrar estatísticas", 0.01)
-   printDelayed("Ctrl+c_______Encerrar programa", 0.01)
-   printDelayedColor("______________________________\n", Colors.BLUE, 0.01)
+   printDelayed("|______________________________|", Colors.BLUE, time=0.01)
+   printDelayed("Tecla                     Ação", Colors.CYAN, time=0.01)
+   printDelayed("|a|________________Mostrar bolsa", Colors.CYAN, time=0.01)
+   printDelayed("|r|_________Mostrar estatísticas", Colors.CYAN, time=0.01)
+   printDelayed("|Ctrl+c|_______Encerrar programa", Colors.CYAN, time=0.01)
+   printDelayed("|______________________________|\n", Colors.BLUE, time=0.01)
 
 
 def getActions():
@@ -107,22 +100,22 @@ def getActions():
       texts.append(f"\t{key}: {value}")
    return texts
 
+
 def showRank():
-   printDelayedColor("______________________________", Colors.BLUE, 0.01)
-   printDelayed("Dinheiro: ")
-   printDelayedColor(f"\t{Player.Money}", Colors.GREEN)
+   printDelayed("|______________________________|", Colors.BLUE, time=0.01)
+   printDelayed(f"Dinheiro: |\t{Player.Money}|", Colors.GREEN)
    printDelayed("Ações: ")
-   for i in getActions():
-      printDelayedColor(i, Colors.BROWN)
-   printDelayedColor("______________________________\n", Colors.BLUE, 0.01)
+   for action in getActions():
+      printDelayed(f"|{action}|", Colors.BROWN)
+   printDelayed("|______________________________|\n", Colors.BLUE, time=0.01)
 
 
 def showB3():
-   printDelayedColor("___________________________________", Colors.BLUE, 0.01)
-   printDelayed("Mostrando ações da bolsa no momento", 0.05)
-   printDelayed(f"Americanas__________________R${B3.Americanas}", 0.05)
-   printDelayed(f"123Milhas__________________R${B3.Milhas}", 0.05)
-   printDelayedColor("___________________________________\n", Colors.BLUE, 0.01)
+   printDelayed("|___________________________________|", Colors.BLUE, time=0.01)
+   printDelayed("Mostrando ações da bolsa no momento", time=0.05)
+   printDelayed(f"   Americanas__________________|R${B3.Americanas}|", Colors.GREEN, time=0.05)
+   printDelayed(f"   123Milhas__________________|R${B3.Milhas}|", Colors.GREEN, time=0.05)
+   printDelayed("|___________________________________|\n", Colors.BLUE, time=0.01)
 
 
 def on_press(key):
